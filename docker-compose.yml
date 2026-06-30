@@ -12,8 +12,11 @@ services:
     expose:
       - "3123"
     labels:
-      # Tell Traefik which network to reach this container on (it's on two).
+      # Tell Traefik which network to reach this container on.
       - "traefik.docker.network=coolify"
+    networks:
+      - default
+      - coolify
     volumes:
       - svm-data:/app/data
     healthcheck:
@@ -22,6 +25,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 240s
+
+networks:
+  coolify:
+    external: true
 
 volumes:
   svm-data:
