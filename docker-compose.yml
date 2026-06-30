@@ -6,15 +6,16 @@ services:
     environment:
       - PEXELS_API_KEY=${PEXELS_API_KEY}
       - LOG_LEVEL=info
-      - PORT=3123
+      # Listen on 80 so Coolify's default Traefik routing maps cleanly.
+      - PORT=80
       - KOKORO_MODEL_PRECISION=q8
       - CONCURRENCY=1
     expose:
-      - "3123"
+      - "80"
     volumes:
       - svm-data:/app/data
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3123/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/health"]
       interval: 30s
       timeout: 10s
       retries: 5
