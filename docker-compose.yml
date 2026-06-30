@@ -6,18 +6,18 @@ services:
     environment:
       - PEXELS_API_KEY=${PEXELS_API_KEY}
       - LOG_LEVEL=info
-      - PORT=80
+      - PORT=3123
       - KOKORO_MODEL_PRECISION=q8
       - CONCURRENCY=1
     expose:
-      - "80"
+      - "3123"
     labels:
       # Tell Traefik which network to reach this container on (it's on two).
       - "traefik.docker.network=coolify"
     volumes:
       - svm-data:/app/data
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3123/health"]
       interval: 30s
       timeout: 10s
       retries: 5
