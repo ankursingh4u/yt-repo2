@@ -1,0 +1,50 @@
+services:
+  short-video-maker:
+    # Prebuilt public image. Variants: latest-tiny (~3GB RAM), latest, latest-cuda.
+    image: gyoridavid/short-video-maker:latest-tiny
+    restart: unless-stopped
+    environment:
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
+      - LOG_LEVEL=info
+      - PORT=3123
+      - KOKORO_MODEL_PRECISION=q8
+      - CONCURRENCY=1
+    # Internal only — never published to the host. Reachable solely via Caddy.
+    expose:
+      - "3123"
+    volumes:
+      - svm-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3123/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - short-video-maker
+    environment:
+      - SVM_USER=${SVM_USER}
+      - SVM_PASS=${SVM_PASS}
+    # Self-hash the Basic Auth password at startup (bcrypt). The plaintext
+    # password is only ever an env var; no hash is committed anywhere.
+    # Coolify's Traefik terminates TLS for your domain and proxies to :80 here.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        export SVM_PASS_HASH="$$(caddy hash-password --plaintext "$$SVM_PASS")"
+        exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+    expose:
+      - "80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  svm-data:
+  caddy-data:
+  caddy-config:
