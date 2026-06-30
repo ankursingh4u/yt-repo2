@@ -6,12 +6,14 @@ services:
     environment:
       - PEXELS_API_KEY=${PEXELS_API_KEY}
       - LOG_LEVEL=info
-      # Listen on 80 so Coolify's default Traefik routing maps cleanly.
       - PORT=80
       - KOKORO_MODEL_PRECISION=q8
       - CONCURRENCY=1
     expose:
       - "80"
+    labels:
+      # Tell Traefik which network to reach this container on (it's on two).
+      - "traefik.docker.network=coolify"
     volumes:
       - svm-data:/app/data
     healthcheck:
